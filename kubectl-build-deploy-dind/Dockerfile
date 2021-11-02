@@ -1,5 +1,5 @@
 ARG IMAGE_REPO
-FROM ${IMAGE_REPO:-lagoon}/kubectl
+FROM tenesmus/kubectl
 
 # the kubectl image comes with an HOME=/home which is needed to run as unpriviledged, but kubectl-build-deploy-dind will run as root
 RUN rm -rf /root && ln -s /home /root
@@ -19,5 +19,10 @@ COPY scripts /kubectl-build-deploy/scripts
 COPY helmcharts  /kubectl-build-deploy/helmcharts
 
 ENV IMAGECACHE_REGISTRY=imagecache.amazeeio.cloud
+
+# Install VA internal certificate.
+ADD http://crl.pki.va.gov/PKI/AIA/VA/VA-Internal-S2-RCA1-v1.cer /usr/local/share/ca-certificates/
+RUN openssl x509 -inform DER -in /usr/local/share/ca-certificates/VA-Internal-S2-RCA1-v1.cer -out /usr/local/share/ca-certificates/VA-Internal-S2-RCA1-v1.crt
+RUN update-ca-certificates
 
 CMD ["/kubectl-build-deploy/build-deploy.sh"]
